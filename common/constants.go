@@ -12,9 +12,9 @@ import (
 
 var StartTime = time.Now().Unix() // unit: second
 var Version = "v0.0.0"            // this hard coding will be replaced automatically when building, no need to manually change
-var SystemName = "New API"
+var SystemName = "HyperEdge API"
 var Footer = ""
-var Logo = ""
+var Logo = "/hyperedge-icon.svg"
 var TopUpLink = ""
 
 // var ChatLink = ""

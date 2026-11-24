@@ -32,6 +32,7 @@ import type { AuthUser } from '@/stores/auth-store'
 
 import { MOBILE_DRAWER_ANIMATION, MOBILE_DRAWER_CONFIG } from '../constants'
 import type { TopNavLink } from '../types'
+import { BrandName } from './header-logo'
 
 /**
  * Brand logo component with skeleton loading
@@ -65,7 +66,11 @@ function BrandLogo({
         ) : null}
         {displayLogo}
       </div>
-      {loading ? <Skeleton className='h-5 w-20' /> : displaySiteName}
+      {loading ? (
+        <Skeleton className='h-5 w-20' />
+      ) : (
+        <BrandName name={displaySiteName} />
+      )}
     </Link>
   )
 }

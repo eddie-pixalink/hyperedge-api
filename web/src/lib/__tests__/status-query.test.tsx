@@ -89,6 +89,15 @@ afterEach(() => {
   useSystemConfigStore.setState(useSystemConfigStore.getInitialState(), true)
 })
 
+test('shows the HyperEdge API name and icon when the server omits branding', async () => {
+  stubStatusEndpoint('')
+  await ensureStatus(createQueryClient())
+  expect(useSystemConfigStore.getState().config).toMatchObject({
+    systemName: 'HyperEdge API',
+    logo: '/hyperedge-icon.svg',
+  })
+})
+
 describe('shared status query deduplication', () => {
   test.each(['cold', 'stale'] as const)(
     'deduplicates %s cache requests across guards and hook consumers',

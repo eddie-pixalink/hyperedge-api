@@ -55,7 +55,7 @@ function EmptyAboutState() {
               rel='noopener noreferrer'
               className='text-primary hover:underline'
             >
-              {t('https://github.com/QuantumNous/new-api')}
+              {t('QuantumNous')}
             </a>
           </p>
           <p className='text-muted-foreground'>
@@ -65,7 +65,7 @@ function EmptyAboutState() {
               rel='noopener noreferrer'
               className='text-primary hover:underline'
             >
-              {t('NewAPI')}
+              New API
             </a>{' '}
             © {currentYear}{' '}
             <a
