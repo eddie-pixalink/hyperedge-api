@@ -46,7 +46,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getPerfMetrics } from '@/features/performance-metrics/api'
 import {
@@ -63,10 +62,10 @@ import { useSystemConfigStore } from '@/stores/system-config-store'
 
 import { DEFAULT_TOKEN_UNIT } from '../constants'
 import { useBillingTime } from '../hooks/use-billing-time'
-import { usePricingData } from '../hooks/use-pricing-data'
 import type { ParsedTaskTier, ParsedTier } from '../lib/billing-expr'
 import { formatBillingCondition } from '../lib/billing-expression/condition-display'
 import { getTierCachePricingMode } from '../lib/cache-pricing'
+import { retailCatalog } from '../lib/hyperedge-retail-catalog'
 import {
   formatTaskUsageUnitPrice,
   getDynamicPriceEntries,
@@ -214,7 +213,6 @@ const MODALITY_LABEL_KEYS: Record<string, string> = {
 const TOKEN_FORMAT = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
 })
-const MODEL_DETAILS_SKELETON_KEYS = ['first', 'second', 'third', 'fourth']
 
 function formatCatalogTokenCount(tokens: number): string {
   if (!Number.isFinite(tokens) || tokens <= 0) return ''
@@ -1503,6 +1501,7 @@ export interface ModelDetailsContentProps {
   usdExchangeRate: number
   tokenUnit: TokenUnit
   showRechargePrice?: boolean
+  quoteOnly?: boolean
 }
 
 export function ModelDetailsContent(props: ModelDetailsContentProps) {
@@ -1524,6 +1523,63 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
     !baseModel.billing_usage_schema ||
     simpleTaskPricing ||
     taskTiers.length === 0
+
+  const overview = (
+    <>
+      <OverviewSummaryGrid model={props.model} />
+
+      <section className='bg-card/60 space-y-5 rounded-xl border p-4 shadow-sm'>
+        <SectionTitle>{t('Pricing')}</SectionTitle>
+        {showBasePrices && (
+          <PriceSection
+            model={baseModel}
+            priceRate={props.priceRate}
+            usdExchangeRate={props.usdExchangeRate}
+            tokenUnit={props.tokenUnit}
+            showRechargePrice={showRechargePrice}
+          />
+        )}
+        {isDynamic && !simpleTaskPricing && (
+          <DynamicPricingBreakdown
+            modelName={baseModel.model_name}
+            billingExpr={baseModel.billing_expr}
+            usageSchema={baseModel.billing_usage_schema}
+            taskPriceOptions={{
+              showRechargePrice,
+              priceRate: props.priceRate,
+              usdExchangeRate: props.usdExchangeRate,
+            }}
+          />
+        )}
+        {!props.quoteOnly && (
+          <GroupPricingSection
+            model={props.model}
+            groupRatio={props.groupRatio}
+            usableGroup={props.usableGroup}
+            autoGroups={props.autoGroups}
+            priceRate={props.priceRate}
+            usdExchangeRate={props.usdExchangeRate}
+            tokenUnit={props.tokenUnit}
+            showRechargePrice={showRechargePrice}
+          />
+        )}
+      </section>
+
+      <ModelBackendDetailsSection model={props.model} />
+    </>
+  )
+
+  if (props.quoteOnly) {
+    return (
+      <div className='@container/details space-y-6'>
+        <ModelHeader model={props.model} />
+        <p className='text-muted-foreground text-sm'>
+          {t('hyperedge.catalog.notice')}
+        </p>
+        {overview}
+      </div>
+    )
+  }
 
   return (
     <div className='@container/details space-y-4'>
@@ -1547,44 +1603,7 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
         </TabsList>
 
         <TabsContent value='overview' className='space-y-6 outline-none'>
-          <OverviewSummaryGrid model={props.model} />
-
-          <section className='bg-card/60 space-y-5 rounded-xl border p-4 shadow-sm'>
-            <SectionTitle>{t('Pricing')}</SectionTitle>
-            {showBasePrices && (
-              <PriceSection
-                model={baseModel}
-                priceRate={props.priceRate}
-                usdExchangeRate={props.usdExchangeRate}
-                tokenUnit={props.tokenUnit}
-                showRechargePrice={showRechargePrice}
-              />
-            )}
-            {isDynamic && !simpleTaskPricing && (
-              <DynamicPricingBreakdown
-                modelName={baseModel.model_name}
-                billingExpr={baseModel.billing_expr}
-                usageSchema={baseModel.billing_usage_schema}
-                taskPriceOptions={{
-                  showRechargePrice,
-                  priceRate: props.priceRate,
-                  usdExchangeRate: props.usdExchangeRate,
-                }}
-              />
-            )}
-            <GroupPricingSection
-              model={props.model}
-              groupRatio={props.groupRatio}
-              usableGroup={props.usableGroup}
-              autoGroups={props.autoGroups}
-              priceRate={props.priceRate}
-              usdExchangeRate={props.usdExchangeRate}
-              tokenUnit={props.tokenUnit}
-              showRechargePrice={showRechargePrice}
-            />
-          </section>
-
-          <ModelBackendDetailsSection model={props.model} />
+          {overview}
         </TabsContent>
 
         <TabsContent value='performance' className='outline-none'>
@@ -1647,46 +1666,17 @@ export function ModelDetails() {
     usableGroup,
     endpointMap,
     autoGroups,
-    isLoading,
     priceRate,
     usdExchangeRate,
-  } = usePricingData()
+  } = retailCatalog
 
   const tokenUnit: TokenUnit =
     search.tokenUnit === 'K' ? 'K' : DEFAULT_TOKEN_UNIT
 
-  const model = useMemo(() => {
-    if (!models || !modelId) return null
-    return models.find((m) => m.model_name === modelId) || null
-  }, [models, modelId])
+  const model = models.find((item) => item.model_name === modelId)
 
   const handleBack = () => {
     navigate({ to: '/pricing', search })
-  }
-
-  if (isLoading) {
-    return (
-      <PublicLayout>
-        <div className='mx-auto max-w-5xl px-4 sm:px-6'>
-          <Skeleton className='mb-4 h-5 w-16' />
-          <div className='space-y-2'>
-            <Skeleton className='h-7 w-64' />
-            <Skeleton className='h-4 w-40' />
-            <Skeleton className='h-4 w-full max-w-md' />
-          </div>
-          <div className='mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4'>
-            {MODEL_DETAILS_SKELETON_KEYS.map((key) => (
-              <Skeleton key={`metric-${key}`} className='h-16 w-full' />
-            ))}
-          </div>
-          <div className='mt-6 space-y-3'>
-            {MODEL_DETAILS_SKELETON_KEYS.map((key) => (
-              <Skeleton key={`section-${key}`} className='h-24 w-full' />
-            ))}
-          </div>
-        </div>
-      </PublicLayout>
-    )
   }
 
   if (!model) {
@@ -1728,7 +1718,7 @@ export function ModelDetails() {
           priceRate={priceRate ?? 1}
           usdExchangeRate={usdExchangeRate ?? 1}
           tokenUnit={tokenUnit}
-          showRechargePrice={search.rechargePrice ?? false}
+          quoteOnly
           endpointMap={
             (endpointMap as Record<
               string,

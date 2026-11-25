@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { DEFAULT_SYSTEM_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 interface HeaderLogoProps {
@@ -47,5 +48,14 @@ export function HeaderLogo({
         className
       )}
     />
+  )
+}
+
+export function BrandName({ name }: { name: string }) {
+  if (name !== DEFAULT_SYSTEM_NAME) return name
+  return (
+    <>
+      Hyper<span className='text-[#486d13] dark:text-[#74ab21]'>Edge</span> API
+    </>
   )
 }
