@@ -179,6 +179,9 @@ describe('administrator update entry', () => {
     expect(within(dialog).getByText('Pre-release')).toBeInTheDocument()
     expect(within(dialog).getByText('Published at')).toBeInTheDocument()
     expect(
+      within(dialog).getByRole('link', { name: /^New API$/ })
+    ).toHaveAttribute('href', 'https://github.com/QuantumNous/new-api')
+    expect(
       within(dialog).queryByText(
         'Checks hourly while you are online, including pre-releases.'
       )

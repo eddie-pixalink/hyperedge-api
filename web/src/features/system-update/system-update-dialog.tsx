@@ -186,6 +186,30 @@ export function SystemUpdateDialog(props: SystemUpdateDialogProps) {
           )}
         </Suspense>
       )}
+      <section className='border-border space-y-2 border-t pt-4 text-sm'>
+        <h3 className='font-medium'>{t('Software attribution')}</h3>
+        <p className='text-muted-foreground'>
+          {t('hyperedge.software.modifiedSource')} © {new Date().getFullYear()}{' '}
+          QuantumNous. Frontend design and development by{' '}
+          <a
+            href='https://github.com/QuantumNous/new-api'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='text-primary underline'
+          >
+            New API
+          </a>{' '}
+          contributors.
+        </p>
+        <a
+          href='https://github.com/QuantumNous/new-api/blob/main/LICENSE'
+          target='_blank'
+          rel='noopener noreferrer'
+          className='text-primary underline'
+        >
+          {t('AGPL v3.0 License')}
+        </a>
+      </section>
     </Dialog>
   )
 }

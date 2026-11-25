@@ -23,7 +23,6 @@ import { PublicLayout } from '@/components/layout'
 import { PageTransition } from '@/components/page-transition'
 
 import {
-  LoadingSkeleton,
   EmptyState,
   SearchBar,
   PricingTable,
@@ -32,9 +31,9 @@ import {
   ModelCardGrid,
   ModelDetailsDrawer,
 } from './components'
-import { EXCLUDED_GROUPS, VIEW_MODES } from './constants'
+import { VIEW_MODES } from './constants'
 import { useFilters } from './hooks/use-filters'
-import { usePricingData } from './hooks/use-pricing-data'
+import { retailCatalog } from './lib/hyperedge-retail-catalog'
 
 export function Pricing() {
   const { t } = useTranslation()
@@ -49,10 +48,9 @@ export function Pricing() {
     usableGroup,
     endpointMap,
     autoGroups,
-    isLoading,
     priceRate,
     usdExchangeRate,
-  } = usePricingData()
+  } = retailCatalog
 
   const {
     searchInput,
@@ -64,7 +62,6 @@ export function Pricing() {
     tagFilter,
     tokenUnit,
     viewMode,
-    showRechargePrice,
     setSearchInput,
     setSortBy,
     setVendorFilter,
@@ -74,7 +71,6 @@ export function Pricing() {
     setTagFilter,
     setTokenUnit,
     setViewMode,
-    setShowRechargePrice,
     filteredModels,
     hasActiveFilters,
     activeFilterCount,
@@ -89,20 +85,12 @@ export function Pricing() {
 
   const selectedModel = useMemo(
     () =>
-      selectedModelName
-        ? (models || []).find(
+    selectedModelName
+        ? models.find(
             (model) => model.model_name === selectedModelName
           ) || null
         : null,
-    [models, selectedModelName]
-  )
-
-  const availableGroups = useMemo(
-    () =>
-      Object.keys(usableGroup || {}).filter(
-        (g) => !EXCLUDED_GROUPS.includes(g)
-      ),
-    [usableGroup]
+    [selectedModelName]
   )
 
   const handleClearAll = useCallback(() => {
@@ -129,7 +117,7 @@ export function Pricing() {
           priceRate={priceRate}
           usdExchangeRate={usdExchangeRate}
           tokenUnit={tokenUnit}
-          showRechargePrice={showRechargePrice}
+          showRechargePrice={false}
           selectedGroup={groupFilter}
         />
       )
@@ -141,20 +129,10 @@ export function Pricing() {
         priceRate={priceRate}
         usdExchangeRate={usdExchangeRate}
         tokenUnit={tokenUnit}
-        showRechargePrice={showRechargePrice}
+        showRechargePrice={false}
         selectedGroup={groupFilter}
         onModelClick={handleModelClick}
       />
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <PublicLayout showMainContainer={false}>
-        <div className='mx-auto w-full max-w-[1800px] px-3 pt-16 pb-8 sm:px-6 sm:pt-20 sm:pb-10 xl:px-8'>
-          <LoadingSkeleton viewMode={viewMode} />
-        </div>
-      </PublicLayout>
     )
   }
 
@@ -182,14 +160,12 @@ export function Pricing() {
               {t('Model Square')}
             </h1>
             <p className='text-muted-foreground/80 mt-3 text-sm sm:mt-4 sm:text-base'>
-              {t('This site currently has {{count}} models enabled', {
-                count: models?.length || 0,
+              {t('hyperedge.catalog.modelCount', {
+                count: models.length,
               })}
             </p>
             <p className='text-muted-foreground/60 mx-auto mt-2 max-w-2xl text-xs leading-relaxed sm:text-sm'>
-              {t(
-                'Discover curated AI models, compare pricing and capabilities, and choose the right model for every scenario.'
-              )}
+              {t('hyperedge.catalog.notice')}
             </p>
             <SearchBar
               value={searchInput}
@@ -215,7 +191,7 @@ export function Pricing() {
               onGroupChange={setGroupFilter}
               onTagChange={setTagFilter}
               vendors={vendors || []}
-              groups={availableGroups}
+              groups={[]}
               groupRatios={groupRatio}
               tags={availableTags}
               models={models || []}
@@ -232,8 +208,7 @@ export function Pricing() {
                 onSortChange={setSortBy}
                 tokenUnit={tokenUnit}
                 onTokenUnitChange={setTokenUnit}
-                showRechargePrice={showRechargePrice}
-                onRechargePriceChange={setShowRechargePrice}
+                showRechargePrice={false}
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 quotaTypeFilter={quotaTypeFilter}
@@ -247,7 +222,7 @@ export function Pricing() {
                 onGroupChange={setGroupFilter}
                 onTagChange={setTagFilter}
                 vendors={vendors || []}
-                groups={availableGroups}
+                groups={[]}
                 groupRatios={groupRatio}
                 tags={availableTags}
                 models={models || []}
@@ -279,7 +254,7 @@ export function Pricing() {
               priceRate={priceRate ?? 1}
               usdExchangeRate={usdExchangeRate ?? 1}
               tokenUnit={tokenUnit}
-              showRechargePrice={showRechargePrice}
+              quoteOnly
             />
           )}
         </PageTransition>
