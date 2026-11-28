@@ -33,10 +33,12 @@ import {
 } from './components'
 import { VIEW_MODES } from './constants'
 import { useFilters } from './hooks/use-filters'
+import { usePricingData } from './hooks/use-pricing-data'
 import { retailCatalog } from './lib/hyperedge-retail-catalog'
 
 export function Pricing() {
   const { t } = useTranslation()
+  const { modelOrder } = usePricingData()
   const [selectedModelName, setSelectedModelName] = useState<string | null>(
     null
   )
@@ -77,7 +79,7 @@ export function Pricing() {
     availableTags,
     clearFilters,
     clearSearch,
-  } = useFilters(models || [])
+  } = useFilters(models || [], modelOrder)
 
   const handleModelClick = useCallback((modelName: string) => {
     setSelectedModelName(modelName)
